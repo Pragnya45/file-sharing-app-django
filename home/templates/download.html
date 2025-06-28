@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -80,7 +81,7 @@
 
   <body>
     <div class="download-container">
-      <img src="/media/image/download.svg" alt="Download Ready" />
+      <img src="{% static 'image/download.svg' %}" alt="Download Ready" />
       <div class="download-title">Your files are ready!</div>
       <a href="/media/zip/{{uid}}.zip" class="download-button"
         >Download Files</a

@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -78,7 +79,7 @@
     <div class="container">
       <div class="upload-card text-center">
         <img
-          src="/media/image/undraw.svg"
+          src="{% static 'image/undraw.svg' %}"
           class="img-fluid mb-3"
           style="max-height: 180px"
           alt="upload"
@@ -127,7 +128,7 @@
         fetch("/handle/", {
           method: "POST",
           headers: {
-            "X-CSRFToken": "{{csrf_token}}",
+            "X-CSRFToken": "{{ csrf_token }}",
           },
           body: formdata,
         })
@@ -135,8 +136,12 @@
           .then((result) => {
             console.log(result);
             if (result.status === 200) {
-              url = `http://127.0.0.1:8000/download/${result.data.folder}`;
+              const url = `/download/${result.data.folder}`;
+              const fullUrl = `${window.location.origin}${url}`;
+
               document.getElementById("btn").style.display = "block";
+              document.getElementById("btn").href = fullUrl;
+              console.log("Download Link:", fullUrl);
             } else {
               alert("Upload failed: " + result.message);
             }
