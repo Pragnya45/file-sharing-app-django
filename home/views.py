@@ -4,6 +4,28 @@ from rest_framework.response import Response
 
 from .serializers import *
 from rest_framework.parsers import MultiPartParser
+from django.http import FileResponse, Http404
+import os, zipfile
+from django.conf import settings
+
+def generate_zip(uid):
+    zip_dir = os.path.join(settings.BASE_DIR, 'public/static/zip')
+    os.makedirs(zip_dir, exist_ok=True)
+
+    zip_path = os.path.join(zip_dir, f"{uid}.zip")
+    if not os.path.exists(zip_path):
+        with zipfile.ZipFile(zip_path, 'w') as zipf:
+            zipf.writestr("README.txt", f"Generated ZIP for UID: {uid}")
+
+    return zip_path
+
+
+def stream_zip_file(request, uid):
+    try:
+        zip_path = generate_zip(uid)
+        return FileResponse(open(zip_path, 'rb'), as_attachment=True, filename=f"{uid}.zip")
+    except FileNotFoundError:
+        raise Http404("ZIP file not found")
 
 
 def home(request):

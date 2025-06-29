@@ -153,14 +153,18 @@
     <div class="download-container">
       <img src="{% static 'image/download.svg' %}" alt="Download Ready" />
       <div class="download-title">Your files are ready!</div>
-      <a
-        id="downloadBtn"
-        href="/media/zip/{{uid}}.zip"
-        class="upload-btn"
-        download
+      <a href="/download_zip/{{uid}}/" class="upload-btn" id="downloadBtn"
+        >Download Files</a
       >
-        Download Files
-      </a>
+
+      <!-- <a
+        href="{% static 'zip/{{uid}}.zip' %}"
+        id="downloadBtn"
+        download
+        class="upload-btn"
+        >Download Files</a
+      > -->
+
       <div class="tip-text">Click the button above to begin your download.</div>
     </div>
 

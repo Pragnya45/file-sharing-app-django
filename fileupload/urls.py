@@ -24,6 +24,7 @@ from home.views import *
 urlpatterns = [
     path('' , home),
     path('download/<uid>/' ,download),
+    path('download_zip/<uid>/', stream_zip_file),
     path('handle/', HandleFileUpload.as_view()),
    
     path('admin/', admin.site.urls),
