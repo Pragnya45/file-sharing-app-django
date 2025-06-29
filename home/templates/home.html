@@ -5,6 +5,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>File Upload</title>
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="{% static 'image/favicon.ico' %}"
+    />
 
     <!-- Bootstrap -->
     <link
@@ -39,9 +44,21 @@
         box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
       }
 
-      .upload-card h2 {
-        font-weight: 700;
-        color: #0277bd;
+      .upload-btn {
+        background: linear-gradient(to right, #8243e1, #2a3fca);
+        border: none;
+        padding: 0.75rem 1.75rem;
+        font-weight: bold;
+        color: #fff;
+        border-radius: 50px;
+        font-size: 16px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .upload-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
       }
 
       .filepond--panel-root {
@@ -72,6 +89,69 @@
       .clipboard-btn:hover {
         transform: scale(1.05);
       }
+
+      .toast-notification {
+        position: fixed;
+        top: 24px;
+        right: 24px;
+        display: flex;
+        align-items: center;
+        background: linear-gradient(to right, #4c7ac0, #327579);
+        backdrop-filter: blur(8px);
+        color: #fff;
+        padding: 14px 18px;
+        border-radius: 12px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        opacity: 0;
+        transform: translateX(100%);
+        transition: all 0.4s ease;
+        z-index: 9999;
+        max-width: 360px;
+        width: calc(100% - 48px);
+        pointer-events: auto;
+        gap: 12px;
+        font-family: "Segoe UI", sans-serif;
+      }
+
+      .toast-notification.show {
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      .toast-icon {
+        font-size: 20px;
+        flex-shrink: 0;
+      }
+
+      .toast-message {
+        display: flex;
+        flex-direction: column;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+
+      .toast-message strong {
+        font-weight: 600;
+        font-size: 15px;
+      }
+
+      .toast-description {
+        opacity: 0.85;
+        font-size: 13px;
+        margin-top: 2px;
+      }
+
+      .toast-close {
+        margin-left: auto;
+        cursor: pointer;
+        font-size: 16px;
+        opacity: 0.8;
+        transition: 0.2s;
+      }
+
+      .toast-close:hover {
+        opacity: 1;
+      }
     </style>
   </head>
 
@@ -91,9 +171,7 @@
 
         <input type="file" class="my-pond mt-3" multiple name="filepond" />
 
-        <button class="btn btn-primary mt-4" onclick="upload_file()">
-          Upload
-        </button>
+        <button class="upload-btn mt-4" onclick="upload_file()">Upload</button>
 
         <div class="success-card" id="btn">
           <p class="mb-2"><strong>Your download link is ready!</strong></p>
@@ -102,6 +180,17 @@
           </button>
           <p class="mt-2 small text-muted">Click the button to copy the URL</p>
         </div>
+      </div>
+
+      <div id="snackbar" class="toast-notification">
+        <div class="toast-icon">✅</div>
+        <div class="toast-message">
+          <strong>Download link copied</strong>
+          <div class="toast-description">
+            Your link has been saved to clipboard.
+          </div>
+        </div>
+        <div class="toast-close" onclick="hideSnackbar()">✕</div>
       </div>
     </div>
 
@@ -114,13 +203,20 @@
     <script>
       FilePond.registerPlugin(FilePondPluginImagePreview);
       const pond = FilePond.create(document.querySelector(".my-pond"));
-
       let url = null;
 
       function upload_file() {
         const files = pond.getFiles();
-        const formdata = new FormData();
 
+        if (!files.length) {
+          showSnackbar(
+            "⚠️ No Files Selected",
+            "Please choose at least one file."
+          );
+          return;
+        }
+
+        const formdata = new FormData();
         for (let i = 0; i < files.length; i++) {
           formdata.append("files", files[i].file);
         }
@@ -134,30 +230,67 @@
         })
           .then((res) => res.json())
           .then((result) => {
-            console.log(result);
             if (result.status === 200) {
-              const url = `/download/${result.data.folder}`;
-              const fullUrl = `${window.location.origin}${url}`;
+              const folderUrl = `/download/${result.data.folder}`;
+              url = `${window.location.origin}${folderUrl}`;
 
-              document.getElementById("btn").style.display = "block";
-              document.getElementById("btn").href = fullUrl;
-              console.log("Download Link:", fullUrl);
+              const successCard = document.getElementById("btn");
+              successCard.style.display = "block";
+
+              // Smooth scroll to download section
+              successCard.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+              });
+
+              showSnackbar(
+                "✅ Upload Successful",
+                "Your download link is ready."
+              );
             } else {
-              alert("Upload failed: " + result.message);
+              showSnackbar(
+                "❌ Upload Failed",
+                result.message || "Try again later."
+              );
             }
           })
           .catch((err) => {
-            alert("Something went wrong!");
             console.error(err);
+            showSnackbar("❌ Error", "Something went wrong. Please try again.");
           });
       }
 
       function copyClip() {
         if (url) {
           navigator.clipboard.writeText(url).then(() => {
-            alert("Copied the link: " + url);
+            showSnackbar(
+              "✅ Download link copied",
+              "Your link has been saved to clipboard."
+            );
           });
         }
+      }
+
+      function showSnackbar(title = "Info", message = "") {
+        const snackbar = document.getElementById("snackbar");
+        const icon = snackbar.querySelector(".toast-icon");
+        const titleEl = snackbar.querySelector(".toast-message strong");
+        const descEl = snackbar.querySelector(".toast-description");
+
+        icon.textContent = title.split(" ")[0]; // Emoji
+        titleEl.textContent = title.replace(/^[^ ]+ /, ""); // Rest of title
+        descEl.textContent = message;
+
+        snackbar.classList.add("show");
+
+        clearTimeout(snackbar.timeout);
+        snackbar.timeout = setTimeout(() => {
+          snackbar.classList.remove("show");
+        }, 4000);
+      }
+
+      function hideSnackbar() {
+        document.getElementById("snackbar").classList.remove("show");
       }
     </script>
   </body>

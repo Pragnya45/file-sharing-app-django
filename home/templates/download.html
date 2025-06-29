@@ -6,6 +6,11 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Download Files</title>
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="{% static 'image/favicon.ico' %}"
+    />
 
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
@@ -46,22 +51,24 @@
         font-weight: 600;
       }
 
-      .download-button {
-        display: inline-block;
-        background-image: linear-gradient(135deg, #fdeb71 10%, #f8d800 100%);
-        color: #04048c;
-        padding: 0.75rem 1.5rem;
-        border-radius: 40px;
-        font-size: 1rem;
-        font-weight: 600;
-        text-decoration: none;
+      .upload-btn {
+        background: linear-gradient(to right, #8243e1, #2a3fca);
+        border: none;
+        padding: 0.75rem 1.75rem;
+        font-weight: bold;
+        color: #fff;
+        border-radius: 50px;
+        font-size: 16px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
         transition: transform 0.2s ease, box-shadow 0.2s ease;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        text-decoration: none;
+        display: inline-block;
       }
 
-      .download-button:hover {
-        transform: translateY(-2px);
+      .upload-btn:hover {
+        transform: scale(1.05);
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        color: #fff;
       }
 
       .tip-text {
@@ -76,6 +83,69 @@
           padding: 2rem 1.5rem;
         }
       }
+
+      /* Snackbar styles */
+      .toast-notification {
+        position: fixed;
+        top: 24px;
+        right: 24px;
+        display: flex;
+        align-items: center;
+        background: linear-gradient(to right, #4c7ac0, #327579);
+        backdrop-filter: blur(8px);
+        color: #fff;
+        padding: 14px 18px;
+        border-radius: 12px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        opacity: 0;
+        transform: translateX(100%);
+        transition: all 0.4s ease;
+        z-index: 9999;
+        max-width: 360px;
+        width: calc(100% - 48px);
+        gap: 12px;
+        font-family: "Segoe UI", sans-serif;
+      }
+
+      .toast-notification.show {
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      .toast-icon {
+        font-size: 20px;
+        flex-shrink: 0;
+      }
+
+      .toast-message {
+        display: flex;
+        flex-direction: column;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+
+      .toast-message strong {
+        font-weight: 600;
+        font-size: 15px;
+      }
+
+      .toast-description {
+        opacity: 0.85;
+        font-size: 13px;
+        margin-top: 2px;
+      }
+
+      .toast-close {
+        margin-left: auto;
+        cursor: pointer;
+        font-size: 16px;
+        opacity: 0.8;
+        transition: 0.2s;
+      }
+
+      .toast-close:hover {
+        opacity: 1;
+      }
     </style>
   </head>
 
@@ -83,10 +153,53 @@
     <div class="download-container">
       <img src="{% static 'image/download.svg' %}" alt="Download Ready" />
       <div class="download-title">Your files are ready!</div>
-      <a href="/media/zip/{{uid}}.zip" class="download-button"
-        >Download Files</a
+      <a
+        id="downloadBtn"
+        href="/media/zip/{{uid}}.zip"
+        class="upload-btn"
+        download
       >
+        Download Files
+      </a>
       <div class="tip-text">Click the button above to begin your download.</div>
     </div>
+
+    <!-- Snackbar -->
+    <div id="snackbar" class="toast-notification">
+      <div class="toast-icon">⬇️</div>
+      <div class="toast-message">
+        <strong>File Downloaded</strong>
+        <div class="toast-description">Your download has started.</div>
+      </div>
+      <div class="toast-close" onclick="hideSnackbar()">✕</div>
+    </div>
+
+    <!-- JS -->
+    <script>
+      document
+        .getElementById("downloadBtn")
+        .addEventListener("click", function (e) {
+          showSnackbar("⬇️ File Downloaded", "Your download has started.");
+        });
+
+      function showSnackbar(icon = "ℹ️", message = "Success") {
+        const snackbar = document.getElementById("snackbar");
+        snackbar.querySelector(".toast-icon").textContent = icon.split(" ")[0];
+        snackbar.querySelector(".toast-message strong").textContent =
+          icon.replace(/^[^ ]+ /, "");
+        snackbar.querySelector(".toast-description").textContent = message;
+
+        snackbar.classList.add("show");
+
+        clearTimeout(snackbar.timeout);
+        snackbar.timeout = setTimeout(() => {
+          snackbar.classList.remove("show");
+        }, 4000);
+      }
+
+      function hideSnackbar() {
+        document.getElementById("snackbar").classList.remove("show");
+      }
+    </script>
   </body>
 </html>
